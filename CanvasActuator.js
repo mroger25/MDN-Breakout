@@ -1,12 +1,12 @@
 export class CanvasActuator {
-  constructor(w, h, color) {
+  constructor({ w, h }, color) {
     this.canvas = document.createElement("canvas");
     this.canvas.style.background = color;
     this.events = {};
     this.start(w, h);
   }
 
-  start(w, h) { 
+  start(w, h) {
     this.canvas.width = w;
     this.canvas.height = h;
     this.ctx = this.canvas.getContext("2d");
