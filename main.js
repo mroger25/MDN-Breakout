@@ -1,90 +1,140 @@
-import { CanvasActuator } from "./CanvasActuator.js";
-import { Ball } from "./Ball.js";
-import { Paddle } from "./Paddle.js";
-import { Brick } from "./Brick.js";
+var game = new Phaser.Game(480, 320, Phaser.AUTO, null, {
+  preload: preload,
+  create: create,
+  update: update,
+});
 
-const drawScore = (ctx, score) => {
-  ctx.font = "16px Arial";
-  ctx.fillStyle = "#0095DD";
-  ctx.fillText(`Score: ${score}`, 8, 20);
-};
+var ball,
+  paddle,
+  bricks,
+  newBrick,
+  brickInfo,
+  scoreText,
+  score = 0,
+  lives = 3,
+  livesText,
+  lifeLostText;
 
-const drawLives = (ctx, lives, w) => {
-  ctx.font = "16px Arial";
-  ctx.fillStyle = "#0095DD";
-  ctx.fillText(`Lives: ${lives}`, w - 65, 20);
-};
+function preload() {
+  game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+  game.scale.pageAlignHorizontally = true;
+  game.scale.pageAlignVertically = true;
+  game.stage.backgroundColor = "#eee";
+  game.load.image("ball", "img/ball.png");
+  game.load.image("paddle", "img/paddle.png");
+  game.load.image("brick", "img/brick.png");
+  game.load.spritesheet("ball", "img/wobble.png", 20, 20);
+}
 
-const sum = (a, b) => {
-  return { x: a.x + b.x, y: a.y + b.y };
-};
+function create() {
+  game.physics.startSystem(Phaser.Physics.ARCADE);
+  game.physics.arcade.checkCollision.down = false;
+  ball = game.add.sprite(
+    game.world.width * 0.5,
+    game.world.height - 25,
+    "ball"
+  );
+  ball.animations.add("wobble", [0, 1, 0, 2, 0, 1, 0, 2, 0], 24);
+  ball.anchor.set(0.5);
+  game.physics.enable(ball, Phaser.Physics.ARCADE);
+  ball.body.velocity.set(150, -150);
+  ball.body.collideWorldBounds = true;
+  ball.body.bounce.set(1);
+  ball.checkWorldBounds = true;
+  ball.events.onOutOfBounds.add(ballLeaveScreen, this);
 
-class Sketch {
-  constructor() {
-    this.court = { w: 480, h: 320 };
-    this.myCanvas = new CanvasActuator(this.court);
-    this.myCanvas.on("draw", this.draw.bind(this));
-    this.ball = new Ball(this.court);
-    this.paddle = new Paddle(this.court);
-    this.paddle.on("ckeckCollision", this.checkCollision.bind(this));
-    // this.myCanvas.on("keydown", this.paddle.move.bind(this.paddle));
-    // this.myCanvas.on("keyup", this.paddle.stop.bind(this.paddle));
-    this.myCanvas.on("mousemove", this.paddle.mouseMove.bind(this.paddle));
-    this.bricks = new Brick(this.court);
-    this.bricks.on("ckeckCollision", this.checkCollision.bind(this));
-    this.bricks.on("score", this.updateScore.bind(this));
-    this.score = 0;
-  }
+  paddle = game.add.sprite(
+    game.world.width * 0.5,
+    game.world.height - 5,
+    "paddle"
+  );
+  paddle.anchor.set(0.5, 1);
+  game.physics.enable(paddle, Phaser.Physics.ARCADE);
+  paddle.body.immovable = true;
 
-  updateScore(e) {
-    this.score += e;
-    if (this.score === this.bricks.rows * this.bricks.cols) {
-      alert("YOU WIN");
-      document.location.reload();
+  initBricks();
+
+  textStyle = { font: "18px Arial", fill: "#0095DD" };
+  scoreText = game.add.text(5, 5, "Points: 0", textStyle);
+  livesText = game.add.text(
+    game.world.width - 5,
+    5,
+    `Lives: ${lives}`,
+    textStyle
+  );
+  livesText.anchor.set(1, 0);
+  lifeLostText = game.add.text(
+    game.world.width * 0.5,
+    game.world.height * 0.5,
+    "Life lost, click to continue",
+    textStyle
+  );
+  lifeLostText.anchor.set(0.5);
+  lifeLostText.visible = false;
+}
+
+function update() {
+  game.physics.arcade.collide(ball, paddle, ballHitPaddle);
+  game.physics.arcade.collide(ball, bricks, ballHitBrick);
+  paddle.x = game.input.x || game.world.width * 0.5;
+}
+
+function initBricks() {
+  brickInfo = {
+    width: 50,
+    height: 20,
+    count: { row: 3, col: 7 },
+    offset: { top: 50, left: 60 },
+    padding: 10,
+  };
+  bricks = game.add.group();
+  for (let c = 0; c < brickInfo.count.col; c++) {
+    for (let r = 0; r < brickInfo.count.row; r++) {
+      var brickX =
+        c * (brickInfo.width + brickInfo.padding) + brickInfo.offset.left;
+      var brickY =
+        r * (brickInfo.height + brickInfo.padding) + brickInfo.offset.top;
+      newBrick = game.add.sprite(brickX, brickY, "brick");
+      game.physics.enable(newBrick, Phaser.Physics.ARCADE);
+      newBrick.body.immovable = true;
+      newBrick.anchor.set(0.5);
+      bricks.add(newBrick);
     }
-  }
-
-  checkCollision({ pos, dim }) {
-    // Checking for collision
-    const test = { x: this.ball.pos.x, y: this.ball.pos.y };
-    if (this.ball.pos.x < pos.x) {
-      test.x = pos.x;
-    } else if (this.ball.pos.x > pos.x + dim.w) {
-      test.x = pos.x + dim.w;
-    }
-    if (this.ball.pos.y < pos.y) {
-      test.y = pos.y;
-    } else if (this.ball.pos.y > pos.y + dim.h) {
-      test.y = pos.y + dim.h;
-    }
-    const dx = this.ball.pos.x - test.x;
-    const dy = this.ball.pos.y - test.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance <= this.ball.r) {
-      const k =
-        distance /
-        (Math.sqrt(
-          this.ball.vel.x * this.ball.vel.x + this.ball.vel.y * this.ball.vel.y
-        ) *
-          1.5);
-      const vel = sum(this.ball.vel, {
-        x: (this.ball.pos.x - test.x) / k,
-        y: (this.ball.pos.y - test.y) / k,
-      });
-      this.ball.vel = vel;
-      return true;
-    }
-    return false;
-  }
-
-  draw() {
-    const ctx = this.myCanvas.ctx;
-    this.ball.update(ctx);
-    this.paddle.update(ctx);
-    this.bricks.update(ctx);
-    drawScore(ctx, this.score);
-    drawLives(ctx, this.ball.lives, this.court.w);
   }
 }
 
-new Sketch();
+function ballHitBrick(ball, brick) {
+  var killTween = game.add.tween(brick.scale);
+  killTween.to({ x: 0, y: 0 }, 200, Phaser.Easing.Linear.None);
+  killTween.onComplete.addOnce(function () {
+    brick.kill();
+  }, this);
+  killTween.start();
+  score += 10;
+  scoreText.setText(`Points: ${score}`);
+  if (score === brickInfo.count.row * brickInfo.count.col * 10) {
+    alert("YOU WIN");
+    location.reload();
+  }
+}
+
+function ballHitPaddle(ball, paddle) {
+  ball.animations.play("wobble");
+}
+
+function ballLeaveScreen() {
+  lives--;
+  if (lives) {
+    livesText.setText("Lives: " + lives);
+    lifeLostText.visible = true;
+    ball.reset(game.world.width * 0.5, game.world.height - 25);
+    paddle.reset(game.world.width * 0.5, game.world.height - 5);
+    game.input.onDown.addOnce(() => {
+      lifeLostText.visible = false;
+      ball.body.velocity.set(150, -150);
+    }, this);
+  } else {
+    alert("GAME OVER");
+    location.reload();
+  }
+}
