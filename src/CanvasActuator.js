@@ -12,7 +12,7 @@ export class CanvasActuator {
     this.ctx = this.canvas.getContext("2d");
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
     this.render();
-    this.mouse();
+    this.click();
     this.keyListen();
   }
 
@@ -38,14 +38,10 @@ export class CanvasActuator {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  mouse() {
+  click() {
     this.canvas.addEventListener("click", (e) => {
       const n = { x: e.layerX, y: e.layerY };
       this.emit("click", n);
-    });
-    this.canvas.addEventListener("mousemove", (e) => {
-      const n = { x: e.layerX, y: e.layerY };
-      this.emit("mousemove", n);
     });
   }
 

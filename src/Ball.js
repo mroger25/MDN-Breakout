@@ -14,7 +14,6 @@ export class Ball {
   constructor({ w, h }) {
     this.court = { w, h };
     this.r = 10;
-    this.lives = 3;
     this.init();
   }
 
@@ -23,7 +22,9 @@ export class Ball {
     this.vel = { x: 2, y: -2 };
   }
 
-  update(ctx, lives) {
+  update(ctx) {
+    // Drawing ball on canvas
+    drawBall(ctx, this.pos, this.r);
     // Bouncing off the left and right
     const lball = this.pos.x - this.r;
     const rball = this.pos.x + this.r;
@@ -38,17 +39,10 @@ export class Ball {
     // End game
     const bball = this.pos.y + this.r;
     if (bball + this.vel.y > this.court.h) {
-      this.lives--;
-      if (this.lives) {
-        this.init();
-      } else {
-        alert("GAME OVER");
-        document.location.reload();
-      }
+      alert("GAME OVER");
+      this.init();
     }
     // Moving ball
     this.pos = sum(this.pos, this.vel);
-    // Drawing ball on canvas
-    drawBall(ctx, this.pos, this.r);
   }
 }

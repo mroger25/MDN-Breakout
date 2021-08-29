@@ -12,34 +12,10 @@ const sum = (a, b) => {
 
 export class Paddle {
   constructor({ w, h }) {
-    this.events = {};
     this.court = { w, h };
     this.dim = { w: 75, h: 10 };
     this.pos = { x: (w - this.dim.w) / 2, y: h - 30 };
     this.vel = { x: 0, y: 0 };
-  }
-
-  emit(e, t) {
-    const i = this.events[e];
-    if (i) {
-      i.forEach((e) => {
-        e(t);
-      });
-    }
-  }
-
-  on(e, t) {
-    if (this.events[e]) {
-      this.events[e].push(t);
-    } else {
-      this.events[e] = [];
-      this.events[e].push(t);
-    }
-  }
-
-  mouseMove(e) {
-    const relativeX = e.x;
-    this.pos.x = relativeX - this.dim.w / 2;
   }
 
   move(e) {
@@ -81,8 +57,5 @@ export class Paddle {
     } else if (this.pos.x < 0) {
       this.pos.x = 0;
     }
-    // Checking for collision
-    const n = { pos: this.pos, dim: this.dim };
-    this.emit("ckeckCollision", n);
   }
 }
