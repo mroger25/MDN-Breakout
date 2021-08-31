@@ -11,10 +11,10 @@ const sum = (a, b) => {
 };
 
 export class Paddle {
-  constructor({ w, h }) {
-    this.court = { w, h };
+  constructor(pong) {
+    this.court = { w: pong.canvas.width, h: pong.canvas.height };
     this.dim = { w: 75, h: 10 };
-    this.pos = { x: (w - this.dim.w) / 2, y: h - 30 };
+    this.pos = { x: (this.court.w - this.dim.w) / 2, y: this.court.h - 30 };
     this.vel = { x: 0, y: 0 };
   }
 
@@ -46,9 +46,7 @@ export class Paddle {
     }
   }
 
-  update(ctx) {
-    // Drawing paddle on canvas
-    drawPaddle(ctx, this.pos, this.dim);
+  update() {
     // Moving paddle
     this.pos = sum(this.pos, this.vel);
     // Restricting paddle to walls
@@ -57,5 +55,9 @@ export class Paddle {
     } else if (this.pos.x < 0) {
       this.pos.x = 0;
     }
+  }
+  draw(ctx) {
+    // Drawing paddle on canvas
+    drawPaddle(ctx, this.pos, this.dim);
   }
 }

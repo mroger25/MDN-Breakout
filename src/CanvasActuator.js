@@ -61,8 +61,9 @@ export class CanvasActuator {
   }
 
   render() {
+    this.emit("update");
     this.clear();
-    this.emit("draw");
+    this.emit("draw", this.ctx);
     requestAnimationFrame(() => {
       this.render();
     });
