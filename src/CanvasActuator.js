@@ -1,5 +1,5 @@
 export class CanvasActuator {
-  constructor({ w, h }, color) {
+  constructor({ dim: { w, h } }, color) {
     this.canvas = document.createElement("canvas");
     this.canvas.style.background = color;
     this.events = {};
