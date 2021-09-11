@@ -12,20 +12,28 @@ export class Ball {
   constructor(pong) {
     this.court = { w: pong.canvas.width, h: pong.canvas.height };
     this.r = 10;
+    this.crashed = false;
     this.init();
   }
 
   init() {
     this.pos = new Vector(this.court.w / 2, this.court.h - 50);
     this.vel = new Vector(2, -2);
+    this.vel.normalize();
+    this.vel.multiply(2);
   }
 
   addVel(v) {
     if (v) {
       const newvel = new Vector(v.x, v.y);
+      this.vel.normalize();
       newvel.normalize();
       newvel.multiply(2);
       this.vel.add(newvel);
+      this.vel.multiply(2);
+      this.crashed = !0;
+    } else {
+      this.crashed = !1;
     }
   }
 
@@ -47,6 +55,7 @@ export class Ball {
     if (bball + this.vel.y > this.court.h) {
       alert("GAME OVER");
       this.init();
+      location.reload();
     }
     // Moving ball
     this.pos.add(this.vel);

@@ -1,7 +1,7 @@
 import { CanvasActuator } from "./CanvasActuator.js";
-import { Vector } from "./Vector.js";
 import { Ball } from "./Ball.js";
 import { Paddle } from "./Paddle.js";
+import { Brick } from "./Brick.js";
 
 class Sketck {
   constructor() {
@@ -9,6 +9,7 @@ class Sketck {
     this.pong = new CanvasActuator(this.court, "#EEE");
     this.ball = new Ball(this.pong);
     this.paddle = new Paddle(this.pong);
+    this.brick = new Brick(this.pong);
     this.setup();
   }
   setup() {
@@ -37,11 +38,26 @@ class Sketck {
   update() {
     this.ball.update();
     this.paddle.update();
+    // if (!this.ball.crashed) {
+    // }
     this.ball.addVel(this.collisionRectCirc(this.paddle, this.ball));
+    for (let c = 0; c < this.brick.cols; c++) {
+      for (let r = 0; r < this.brick.rows; r++) {
+        const brick = this.brick.grid[c][r];
+        if (brick.status) {
+          const crashed = this.collisionRectCirc(brick, this.ball);
+          if (crashed) {
+            this.ball.addVel(crashed);
+            // brick.status = !1;
+          }
+        }
+      }
+    }
   }
   draw(ctx) {
     this.paddle.draw(ctx);
     this.ball.draw(ctx);
+    this.brick.draw(ctx);
   }
 }
 
